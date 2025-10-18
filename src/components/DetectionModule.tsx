@@ -1,13 +1,15 @@
-import { Shield, Loader2, Link as LinkIcon } from 'lucide-react';
+import { Shield, Loader2, Link as LinkIcon, FlaskConical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { useAnalysis } from '@/contexts/AnalysisContext';
 import { toast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
 
 const DetectionModule = () => {
-  const { inputContent, setInputContent, isLoading, performAnalysis } = useAnalysis();
+  const { inputContent, setInputContent, isLoading, performAnalysis, performMockAnalysis, useMockMode, setUseMockMode } = useAnalysis();
 
   // Detect if input contains a URL
   const urlPattern = /(https?:\/\/[^\s]+)/g;
@@ -30,13 +32,81 @@ const DetectionModule = () => {
     <div className="w-full max-w-5xl mx-auto space-y-6 animate-fade-in">
       {/* Analysis Console Header */}
       <div className="space-y-3 border-l-4 border-primary pl-4">
-        <Label htmlFor="news-input" className="text-2xl font-bold text-foreground tracking-wide uppercase">
-          Analysis Console
-        </Label>
-        <p className="text-sm text-muted-foreground font-mono">
-          &gt; Input news content for credibility verification
-        </p>
+        <div className="flex items-center justify-between">
+          <div className="space-y-3">
+            <Label htmlFor="news-input" className="text-2xl font-bold text-foreground tracking-wide uppercase">
+              Analysis Console
+            </Label>
+            <p className="text-sm text-muted-foreground font-mono">
+              &gt; Input news content for credibility verification
+            </p>
+          </div>
+          
+          {/* Testing Mode Toggle */}
+          <div className="flex items-center gap-3 bg-card border border-border rounded-lg px-4 py-2">
+            <FlaskConical className="h-5 w-5 text-primary" />
+            <Label htmlFor="mock-mode" className="text-sm font-mono cursor-pointer">
+              TESTING MODE
+            </Label>
+            <Switch
+              id="mock-mode"
+              checked={useMockMode}
+              onCheckedChange={setUseMockMode}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
       </div>
+      
+      {/* Mock Testing Panel */}
+      {useMockMode && (
+        <Card className="p-6 border-2 border-primary/30 bg-primary/5 space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+              <FlaskConical className="h-5 w-5" />
+              Testing Scenarios
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Test the loading screen and different credibility outcomes using predefined mock data
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Button
+              onClick={() => performMockAnalysis('high-credibility')}
+              disabled={isLoading}
+              variant="outline"
+              className="flex flex-col gap-2 h-auto py-4 border-2 border-success/50 hover:bg-success/10"
+            >
+              <div className="text-lg">✅</div>
+              <div className="font-bold">High Credibility</div>
+              <div className="text-xs text-muted-foreground">Score: 95 | 3s delay</div>
+            </Button>
+            
+            <Button
+              onClick={() => performMockAnalysis('medium-credibility')}
+              disabled={isLoading}
+              variant="outline"
+              className="flex flex-col gap-2 h-auto py-4 border-2 border-yellow-500/50 hover:bg-yellow-500/10"
+            >
+              <div className="text-lg">⚠️</div>
+              <div className="font-bold">Medium Credibility</div>
+              <div className="text-xs text-muted-foreground">Score: 55 | 4s delay</div>
+            </Button>
+            
+            <Button
+              onClick={() => performMockAnalysis('low-credibility')}
+              disabled={isLoading}
+              variant="outline"
+              className="flex flex-col gap-2 h-auto py-4 border-2 border-danger/50 hover:bg-danger/10"
+            >
+              <div className="text-lg">❌</div>
+              <div className="font-bold">Low Credibility</div>
+              <div className="text-xs text-muted-foreground">Score: 10 | 5s delay</div>
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Secure Terminal Input */}
       <div className="relative border-2 border-primary/30 rounded-lg p-1 shadow-[0_0_20px_hsl(190_100%_50%_/_0.2)]">

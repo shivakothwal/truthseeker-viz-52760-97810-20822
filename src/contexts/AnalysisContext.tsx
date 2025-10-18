@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { simulateMockAnalysis, type MockScenario } from '@/lib/mockData';
 
 export interface AnalysisResult {
   label: 'FAKE' | 'CREDIBLE';
@@ -30,7 +31,10 @@ interface AnalysisContextType extends AnalysisState {
   setIsLoading: (loading: boolean) => void;
   setIsError: (error: string | null) => void;
   performAnalysis: () => Promise<void>;
+  performMockAnalysis: (scenario: 'high-credibility' | 'medium-credibility' | 'low-credibility') => Promise<void>;
   clearAnalysis: () => void;
+  useMockMode: boolean;
+  setUseMockMode: (useMock: boolean) => void;
 }
 
 const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined);
@@ -40,6 +44,7 @@ export const AnalysisProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState<string | null>(null);
+  const [useMockMode, setUseMockMode] = useState(false);
 
   const performAnalysis = async () => {
     if (!inputContent.trim()) {
@@ -95,6 +100,43 @@ export const AnalysisProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
+  const performMockAnalysis = async (scenario: MockScenario) => {
+    setIsLoading(true);
+    setIsError(null);
+    setAnalysisResult(null);
+
+    // Track start time to ensure minimum loading duration
+    const startTime = Date.now();
+    const MIN_LOADING_TIME = 3600; // 3.6 seconds to show full animation
+
+    try {
+      const data = await simulateMockAnalysis(scenario);
+      
+      // Ensure minimum loading time for better UX
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+      
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+      
+      setAnalysisResult(data);
+    } catch (error) {
+      // Even on error, maintain minimum loading time
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+      
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+      
+      setIsError('Mock analysis failed unexpectedly.');
+      console.error('Mock API Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const clearAnalysis = () => {
     setInputContent('');
     setAnalysisResult(null);
@@ -114,7 +156,10 @@ export const AnalysisProvider: React.FC<{ children: ReactNode }> = ({ children }
         setIsLoading,
         setIsError,
         performAnalysis,
+        performMockAnalysis,
         clearAnalysis,
+        useMockMode,
+        setUseMockMode,
       }}
     >
       {children}
