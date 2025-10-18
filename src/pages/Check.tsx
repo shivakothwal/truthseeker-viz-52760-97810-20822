@@ -11,15 +11,6 @@ import { toast } from '@/hooks/use-toast';
 const Check = () => {
   const { isLoading, isError, analysisResult } = useAnalysis();
 
-  useEffect(() => {
-    if (isError) {
-      toast({
-        title: "Analysis Error",
-        description: isError,
-        variant: "destructive",
-      });
-    }
-  }, [isError]);
 
   useEffect(() => {
     if (isLoading) {
